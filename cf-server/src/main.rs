@@ -42,6 +42,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::default())
             .app_data(data.clone())
             .configure(routes::init_health_routes)
+            .configure(routes::init_anilist_routes)
     })
         .bind(("127.0.0.1", 8080))?
         .run()

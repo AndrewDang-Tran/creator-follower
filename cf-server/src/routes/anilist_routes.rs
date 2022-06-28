@@ -1,61 +1,33 @@
-use actix_web::{get, Responder, web};
-use serde::{Deserialize, Serialize};
+use actix_web::{get, Responder, web, HttpResponse};
 use crate::AppData;
-use rss::Channel;
+use graphql_client::{GraphQLQuery, Response};
+use serde::Serialize;
+use reqwest;
 
-#[derive(Serialize)]
-pub struct AnilistMediaResponse {
-    pub media_list: Vec<AnilistMedia>
-}
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "graphql_schemas/anilist-schema.graphql",
+    query_path = "graphql_schemas/staff-media-query.graphql",
+    response_derives = "Serialize,Debug"
+)]
+pub struct StaffMediaQuery;
 
-pub struct AnilistStaff
-
-pub struct AnilistMedia {
-    pub id: i64,
-    #[serde(rename(serialize="type")]
-    pub media_type: String,
-    pub title: AnilistTitle,
-    pub description: String,
-    pub siteUrl: String,
-    pub status: String
-}
-
-pub struct AnilistTitle {
-    english: Option<String>,
-    romaji: Option<String>,
-    native: Option<String>
-}
-
-pub struct AnilistCoverImage {
-    medium: String
-}
-
-#[get("/anilist/rss/{anilist_id")]
+#[get("/anilist/rss/{anilist_id}")]
 async fn get_anilist_rss_feed(path: web::Path<i64>,
-                                data: AppData) -> impl Responder {
-    let anilist_id: i64 = path.into_inner();
-    let json_body: String = reqwest::get("https://www.rust-lang.org")
-        .await?
-        .text()
-        .await?;
+                              data: AppData) -> impl Responder {
+    let id: i64 = path.into_inner();
+    let staff_media_query_variables: staff_media_query::Variables = staff_media_query::Variables {
+        id: Some(id)
+    };
+    let staff_media_request = StaffMediaQuery::build_query(staff_media_query_variables);
+    let client = reqwest::Client::new();
 
-    let AniListMedia
-
-
-
+    let mut res = client.post("https://graphql.anilist.co").json(&staff_media_request).send().await.unwrap();
+    let response_body: Response<staff_media_query::ResponseData> = res.json().await.unwrap();
+    println!("{:#?}", response_body);
+    web::Json(response_body)
 }
 
-#[get("/arguments/{argument_id}")]
-async fn get_argument(path: web::Path<i64>,
-                      data: AppData) -> impl Responder {
-    let argument_id = path.into_inner();
-    let argument_result = internal_get_argument(&data, argument_id).await;
-    match argument_result {
-        Ok(argument) => {
-            HttpResponse::Ok().json(argument)
-        },
-        Err(_e) => {
-            HttpResponse::InternalServerError().finish()
-        }
-    }
+pub fn init(cfg: &mut web::ServiceConfig) {
+    cfg.service(get_anilist_rss_feed);
 }

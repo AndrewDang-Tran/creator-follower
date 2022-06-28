@@ -1,0 +1,35 @@
+query StaffMediaQuery ($id: Int) {
+  Staff (id: $id) {
+    id,
+    name {
+      full
+      native
+    },
+    siteUrl,
+    description,
+    image {
+      large
+      medium
+    },
+    staffMedia {
+      edges {
+        staffRole
+      }
+      nodes {
+        id,
+        title {
+          romaji
+          english
+          native
+        },
+        type,
+        description,
+        coverImage {
+          medium
+        },
+        siteUrl,
+        status
+      }
+    }
+  }
+}
