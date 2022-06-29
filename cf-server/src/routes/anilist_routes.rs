@@ -96,7 +96,12 @@ async fn get_anilist_rss_feed(path: web::Path<i64>,
             let m = x.expect("Logically cannot be None");
             let mut title: String = "Anilist has no title".to_string();
             if let Some(t) = m.title {
-                let anime_name_collection: Vec<Option<String>> = vec![t.english, t.romaji, t.native];
+                let mut english = t.romaji;
+                if  t.english.is_some() {
+                    english = t.english;
+                }
+
+                let anime_name_collection: Vec<Option<String>> = vec![english, t.native];
                 title = anime_name_collection.into_iter()
                     .filter(|name| name.is_some())
                     .map(|name| name.expect("logically cannot be None"))
