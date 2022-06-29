@@ -1,8 +1,41 @@
-use actix_web::{get, Responder, web, HttpResponse};
+use actix_web::{get, Responder, web, HttpResponse, error, http::header::ContentType, http::StatusCode};
 use crate::AppData;
 use graphql_client::{GraphQLQuery, Response};
-use serde::Serialize;
+use rss::{Channel, ChannelBuilder, Item, ItemBuilder};
 use reqwest;
+use derive_more::{Display, Error};
+
+const ANILIST_GRAPHQL_URL: &str = "https://graphql.anilist.co";
+
+
+#[derive(Debug, Display, Error)]
+enum CreatorFollowerError {
+    #[display(fmt = "internal error")]
+    InternalError,
+
+    #[display(fmt = "bad request")]
+    BadClientData,
+
+    #[display(fmt = "timeout")]
+    Timeout,
+}
+
+impl error::ResponseError for CreatorFollowerError {
+    fn error_response(&self) -> HttpResponse {
+        HttpResponse::build(self.status_code())
+            .insert_header(ContentType::html())
+            .body(self.to_string())
+    }
+
+    fn status_code(&self) -> StatusCode {
+        match *self {
+            CreatorFollowerError::InternalError => StatusCode::INTERNAL_SERVER_ERROR,
+            CreatorFollowerError::BadClientData => StatusCode::BAD_REQUEST,
+            CreatorFollowerError::Timeout => StatusCode::GATEWAY_TIMEOUT,
+        }
+    }
+}
+
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -12,9 +45,9 @@ use reqwest;
 )]
 pub struct StaffMediaQuery;
 
-#[get("/anilist/rss/{anilist_id}")]
+#[get("/rss/anilist/staff/{anilist_id}")]
 async fn get_anilist_rss_feed(path: web::Path<i64>,
-                              data: AppData) -> impl Responder {
+                              data: AppData) -> Result<impl Responder, CreatorFollowerError> {
     let id: i64 = path.into_inner();
     let staff_media_query_variables: staff_media_query::Variables = staff_media_query::Variables {
         id: Some(id)
@@ -22,11 +55,79 @@ async fn get_anilist_rss_feed(path: web::Path<i64>,
     let staff_media_request = StaffMediaQuery::build_query(staff_media_query_variables);
     let client = reqwest::Client::new();
 
-    let mut res = client.post("https://graphql.anilist.co").json(&staff_media_request).send().await.unwrap();
+    let res = client.post(ANILIST_GRAPHQL_URL).json(&staff_media_request).send().await.unwrap();
     let response_body: Response<staff_media_query::ResponseData> = res.json().await.unwrap();
-    println!("{:#?}", response_body);
-    web::Json(response_body)
+
+    //let roles = staff.staffMedia.edges[].staffRole
+    /*
+      {
+        "id": 6075,
+        "title": {
+          "romaji": "Ai no Wakakusa Yama Monogatari",
+          "english": null,
+          "native": "愛の若草山物語"
+        },
+        "type": "ANIME",
+        "description": "The comic story of Shizuka, the eldest daughter, who lives at home, showing no signs of getting married; her mother, who is both annoyed with Shizuka, and at the same time concerned about her window of eligibility; her sister Ikumi, with whom she gets along, even though they fight; and her father, who feels henpecked in this all-female household.<br>\n<br>\n<i>Note: Part of Anime no Ai Awa Awa Hour (アニメ愛のあわあわアワー), three relationship-related comedy series aimed at women that were aired on the same day.</i>",
+        "coverImage": {
+          "medium": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/small/6075.jpg"
+        },
+        "siteUrl": "https://anilist.co/anime/6075",
+        "status": "FINISHED"
+      },
+      */
+    let staff = response_body.data.ok_or(CreatorFollowerError::InternalError)?
+        .staff.ok_or(CreatorFollowerError::InternalError)?;
+    let media = staff
+        .staff_media.ok_or(CreatorFollowerError::InternalError)?
+        .nodes.ok_or(CreatorFollowerError::InternalError)?;
+    let anilist_staff_name = staff.name.ok_or(CreatorFollowerError::InternalError)?;
+
+    let staff_name_collection: Vec<Option<String>> = vec![anilist_staff_name.full, anilist_staff_name.native];
+    let staff_name: String = staff_name_collection.into_iter()
+        .filter(|name| name.is_some())
+        .map(|name| name.expect(""))
+        .collect::<Vec<String>>()
+        .join(", ");
+
+    let staff_channel_items: Vec<Item> = media.into_iter()
+        .filter(|m| m.is_some())
+        .map(|x| {
+            let m = x.expect("Logically cannot be None");
+            let mut title: String = "Anilist has no title".to_string();
+            if let Some(t) = m.title {
+                let anime_name_collection: Vec<Option<String>> = vec![t.english, t.romaji, t.native];
+                title = anime_name_collection.into_iter()
+                    .filter(|name| name.is_some())
+                    .map(|name| name.expect("logically cannot be None"))
+                    .collect::<Vec<String>>()
+                    .join(", ");
+            }
+
+            ItemBuilder::default()
+                .title(title)
+                .link(m.site_url)
+                .description(m.description)
+                //.pub_date()
+                .build()
+        }).collect();
+
+    let staff_channel: Channel = ChannelBuilder::default()
+        .title(staff_name)
+        .link("link".to_string())
+        .description("example description".to_string())
+        //.image()
+        //.last_build_date()
+        //.docs()
+        //.ttl()
+        .items(staff_channel_items)
+        .build();
+    //println!("{:#?}", media);
+    Ok(HttpResponse::Ok()
+        .content_type(ContentType::xml())
+        .body(staff_channel.to_string()))
 }
+
 
 pub fn init(cfg: &mut web::ServiceConfig) {
     cfg.service(get_anilist_rss_feed);
