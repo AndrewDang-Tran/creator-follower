@@ -4,6 +4,7 @@ use graphql_client::{GraphQLQuery, Response};
 use rss::{Channel, ChannelBuilder, Item, ItemBuilder};
 use reqwest;
 use derive_more::{Display, Error};
+use chrono::naive::NaiveDate;
 
 const ANILIST_GRAPHQL_URL: &str = "https://graphql.anilist.co";
 
@@ -91,7 +92,19 @@ async fn get_anilist_rss_feed(path: web::Path<i64>,
         .join(", ");
 
     let staff_channel_items: Vec<Item> = media.into_iter()
-        .filter(|m| m.is_some())
+        .filter_map(|m| {
+            let has_media = m.is_some();
+            let start_date = m.as_ref()
+                .expect("Anilist does not allow None start_date")
+                .start_date
+                .as_ref().expect("Anilist should always have it"); //TODO: replace with anilist error
+            let has_start_date = start_date.year.is_some() || start_date.month.is_some() || start_date.day.is_some();
+            if has_media && has_start_date {
+                Some(m)
+            } else {
+                None
+            }
+        })
         .map(|x| {
             let m = x.expect("Logically cannot be None");
             let mut title: String = "Anilist has no title".to_string();
@@ -109,11 +122,17 @@ async fn get_anilist_rss_feed(path: web::Path<i64>,
                     .join(", ");
             }
 
+            let start_date = m.start_date.as_ref().expect("Anilist does not allow None start_date");
+            let year = start_date.year.expect("Year cannot be None");
+            let month = start_date.month.expect("Month cannot be None");
+            let day = start_date.day.expect("Day cannot be None");
+            let naive_date = NaiveDate::from_ymd(year as i32, month as u32, day as u32);
+
             ItemBuilder::default()
                 .title(title)
                 .link(m.site_url)
                 .description(m.description)
-                //.pub_date()
+                .pub_date(naive_date.to_string())
                 .build()
         }).collect();
 
@@ -127,7 +146,7 @@ async fn get_anilist_rss_feed(path: web::Path<i64>,
         //.ttl()
         .items(staff_channel_items)
         .build();
-    //println!("{:#?}", media);
+
     Ok(HttpResponse::Ok()
         .content_type(ContentType::xml())
         .body(staff_channel.to_string()))

@@ -28,6 +28,11 @@ query StaffMediaQuery ($id: Int) {
           medium
         },
         siteUrl,
+        startDate {
+          year
+          month
+          day
+        },
         status
       }
     }
