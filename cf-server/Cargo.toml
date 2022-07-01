@@ -8,7 +8,6 @@ edition = "2021"
 [dependencies]
 actix-web = "4.0.1"
 serde = { version = "1.0.136", features = ["derive"]}
-sqlx = { version = "0.5.13", features=["sqlite", "runtime-actix-rustls"]}
 pretty_env_logger = "0.4"
 rss = "2.0"
 reqwest = { version = "0.11", features = ["json"] }
