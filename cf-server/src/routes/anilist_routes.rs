@@ -1,48 +1,14 @@
-use actix_web::{get, Responder, web, HttpResponse, error, http::header::ContentType, http::StatusCode};
+use actix_web::{get, Responder, web, HttpResponse, http::header::ContentType};
 use crate::AppData;
 use graphql_client::{GraphQLQuery, Response};
 use rss::{Channel, ChannelBuilder, Item, ItemBuilder, ImageBuilder, Image};
 use reqwest;
-use derive_more::{Display, Error};
 use chrono::naive::NaiveDate;
+use super::super::errors::ServiceError;
 
 const ANILIST_GRAPHQL_URL: &str = "https://graphql.anilist.co";
 const RSS_2_SPECIFICATION_URL: &str = "https://validator.w3.org/feed/docs/rss2.html";
 const NO_STAFF_DESCRIPTION: &str = "No description provided by Anilist for this staff.";
-
-
-#[derive(Debug, Display, Error)]
-enum CreatorFollowerError {
-    #[display(fmt = "internal error")]
-    InternalError,
-
-    #[display(fmt = "bad request")]
-    BadClientData,
-
-    #[display(fmt = "timeout")]
-    Timeout,
-
-    #[display(fmt= "Unexpected anilist data format")]
-    AnilistDataFormat,
-}
-
-impl error::ResponseError for CreatorFollowerError {
-    fn error_response(&self) -> HttpResponse {
-        HttpResponse::build(self.status_code())
-            .insert_header(ContentType::html())
-            .body(self.to_string())
-    }
-
-    fn status_code(&self) -> StatusCode {
-        match *self {
-            CreatorFollowerError::InternalError => StatusCode::INTERNAL_SERVER_ERROR,
-            CreatorFollowerError::AnilistDataFormat => StatusCode::INTERNAL_SERVER_ERROR,
-            CreatorFollowerError::BadClientData => StatusCode::BAD_REQUEST,
-            CreatorFollowerError::Timeout => StatusCode::GATEWAY_TIMEOUT,
-        }
-    }
-}
-
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -54,7 +20,7 @@ pub struct StaffMediaQuery;
 
 #[get("/rss/anilist/staff/{anilist_id}")]
 async fn get_anilist_rss_feed(path: web::Path<i64>,
-                              data: AppData) -> Result<impl Responder, CreatorFollowerError> {
+                              data: AppData) -> Result<impl Responder, ServiceError> {
     let id: i64 = path.into_inner();
     let staff_media_query_variables: staff_media_query::Variables = staff_media_query::Variables {
         id: Some(id)
@@ -83,12 +49,12 @@ async fn get_anilist_rss_feed(path: web::Path<i64>,
         "status": "FINISHED"
       },
       */
-    let staff = response_body.data.ok_or(CreatorFollowerError::InternalError)?
-        .staff.ok_or(CreatorFollowerError::InternalError)?;
+    let staff = response_body.data.ok_or(ServiceError::InternalError)?
+        .staff.ok_or(ServiceError::InternalError)?;
     let media = staff
-        .staff_media.ok_or(CreatorFollowerError::InternalError)?
-        .nodes.ok_or(CreatorFollowerError::InternalError)?;
-    let anilist_staff_name = staff.name.ok_or(CreatorFollowerError::InternalError)?;
+        .staff_media.ok_or(ServiceError::InternalError)?
+        .nodes.ok_or(ServiceError::InternalError)?;
+    let anilist_staff_name = staff.name.ok_or(ServiceError::InternalError)?;
 
     let staff_name_collection: Vec<Option<String>> = vec![anilist_staff_name.full, anilist_staff_name.native];
     let staff_name: String = staff_name_collection.into_iter()
@@ -142,9 +108,9 @@ async fn get_anilist_rss_feed(path: web::Path<i64>,
                 .build()
         }).collect();
 
-    let site_url = staff.site_url.ok_or(CreatorFollowerError::AnilistDataFormat)?;
-    let image_url = staff.image.ok_or(CreatorFollowerError::AnilistDataFormat)?
-      .large.ok_or(CreatorFollowerError::AnilistDataFormat)?;
+    let site_url = staff.site_url.ok_or(ServiceError::AnilistDataFormat)?;
+    let image_url = staff.image.ok_or(ServiceError::AnilistDataFormat)?
+      .large.ok_or(ServiceError::AnilistDataFormat)?;
     let rss_image: Image = ImageBuilder::default()
       .title(&staff_name)
       .link(&site_url)
