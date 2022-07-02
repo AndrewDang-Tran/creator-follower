@@ -1,12 +1,14 @@
 use actix_web::{get, Responder, web, HttpResponse, error, http::header::ContentType, http::StatusCode};
 use crate::AppData;
 use graphql_client::{GraphQLQuery, Response};
-use rss::{Channel, ChannelBuilder, Item, ItemBuilder};
+use rss::{Channel, ChannelBuilder, Item, ItemBuilder, ImageBuilder, Image};
 use reqwest;
 use derive_more::{Display, Error};
 use chrono::naive::NaiveDate;
 
 const ANILIST_GRAPHQL_URL: &str = "https://graphql.anilist.co";
+const RSS_2_SPECIFICATION_URL: &str = "https://validator.w3.org/feed/docs/rss2.html";
+const NO_STAFF_DESCRIPTION: &str = "No description provided by Anilist for this staff.";
 
 
 #[derive(Debug, Display, Error)]
@@ -19,6 +21,9 @@ enum CreatorFollowerError {
 
     #[display(fmt = "timeout")]
     Timeout,
+
+    #[display(fmt= "Unexpected anilist data format")]
+    AnilistDataFormat,
 }
 
 impl error::ResponseError for CreatorFollowerError {
@@ -31,6 +36,7 @@ impl error::ResponseError for CreatorFollowerError {
     fn status_code(&self) -> StatusCode {
         match *self {
             CreatorFollowerError::InternalError => StatusCode::INTERNAL_SERVER_ERROR,
+            CreatorFollowerError::AnilistDataFormat => StatusCode::INTERNAL_SERVER_ERROR,
             CreatorFollowerError::BadClientData => StatusCode::BAD_REQUEST,
             CreatorFollowerError::Timeout => StatusCode::GATEWAY_TIMEOUT,
         }
@@ -136,14 +142,25 @@ async fn get_anilist_rss_feed(path: web::Path<i64>,
                 .build()
         }).collect();
 
+    let site_url = staff.site_url.ok_or(CreatorFollowerError::AnilistDataFormat)?;
+    let image_url = staff.image.ok_or(CreatorFollowerError::AnilistDataFormat)?
+      .large.ok_or(CreatorFollowerError::AnilistDataFormat)?;
+    let rss_image: Image = ImageBuilder::default()
+      .title(&staff_name)
+      .link(&site_url)
+      .url(&image_url)
+      .build();
+    let mut staff_description = NO_STAFF_DESCRIPTION.to_string();
+    if staff.description.is_some() {
+      staff_description = staff.description.expect("staff.description cannot be None");
+    }
+
     let staff_channel: Channel = ChannelBuilder::default()
-        .title(staff_name)
-        .link("link".to_string())
-        .description("example description".to_string())
-        //.image()
-        //.last_build_date()
-        //.docs()
-        //.ttl()
+        .title(&staff_name)
+        .link(&site_url)
+        .description(&staff_description)
+        .image(rss_image)
+        .docs(RSS_2_SPECIFICATION_URL.to_string())
         .items(staff_channel_items)
         .build();
 

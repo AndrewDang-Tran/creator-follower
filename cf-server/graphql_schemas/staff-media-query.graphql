@@ -24,9 +24,6 @@ query StaffMediaQuery ($id: Int) {
         },
         type,
         description,
-        coverImage {
-          medium
-        },
         siteUrl,
         startDate {
           year
