@@ -5,23 +5,19 @@ use actix_web::{
 };
 use derive_more::{Display, Error};
 use std::convert::From;
-use std::error::Error as StdError;
 use std::fmt;
 
-#[derive(Debug, Display)]
+#[derive(Debug, Display, Error)]
 pub struct ErrorMessageWrapper {
     message: &'static str,
 }
 
-impl StdError for ErrorMessageWrapper {}
-
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub struct AnilistServerError {
     pub message: String,
     pub status_code: StatusCode,
 }
 
-impl StdError for AnilistServerError {}
 impl fmt::Display for AnilistServerError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.message)

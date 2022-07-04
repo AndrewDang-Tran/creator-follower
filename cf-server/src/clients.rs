@@ -52,12 +52,12 @@ impl AnilistClient {
                 .ok_or(errors::anilist_data_format(
                     "response_body.errors exists but is empty",
                 ))?;
-            let anilist_error_accumulator = AnilistServerError {
+            let anilist_error = AnilistServerError {
                 message: first.message,
                 status_code: *status_code,
             };
 
-            return Err(ServiceError::from(anilist_error_accumulator));
+            return Err(ServiceError::from(anilist_error));
         }
         response_body
             .data
