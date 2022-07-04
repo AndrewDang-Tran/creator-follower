@@ -1,29 +1,52 @@
 use actix_web::{
     error,
-    http::{StatusCode, header::ContentType},
+    http::{header::ContentType, StatusCode},
     HttpResponse,
 };
-use std::error::Error as StdError;
 use derive_more::{Display, Error};
+use std::convert::From;
+use std::error::Error as StdError;
+use std::fmt;
 
 #[derive(Debug, Display)]
 pub struct ErrorMessageWrapper {
-    message: &'static str
+    message: &'static str,
 }
 
 impl StdError for ErrorMessageWrapper {}
 
+#[derive(Debug)]
+pub struct AnilistServerError {
+    pub message: String,
+    pub status_code: StatusCode,
+}
+
+impl StdError for AnilistServerError {}
+impl fmt::Display for AnilistServerError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
+impl From<AnilistServerError> for ServiceError {
+    fn from(e: AnilistServerError) -> ServiceError {
+        ServiceError::AnilistError(e)
+    }
+}
 
 #[derive(Debug, Display, Error)]
 pub enum ServiceError {
-    #[display(fmt = "An internal error occurred. Please try again Later")]
+    #[display(fmt = "An internal error occurred. Please try again later")]
     InternalError,
 
     #[display(fmt = "Unexpected Anilist data format: {}", _0)]
     AnilistDataFormat(ErrorMessageWrapper),
 
     #[display(fmt = "An internal error occurred: {}", _0)]
-    InternalLogicError(ErrorMessageWrapper)
+    InternalLogicError(ErrorMessageWrapper),
+
+    #[display(fmt = "An error occurred in Anilist: {}", _0)]
+    AnilistError(AnilistServerError),
 }
 
 impl error::ResponseError for ServiceError {
@@ -38,11 +61,12 @@ impl error::ResponseError for ServiceError {
             ServiceError::InternalError => StatusCode::INTERNAL_SERVER_ERROR,
             ServiceError::AnilistDataFormat(_e) => StatusCode::INTERNAL_SERVER_ERROR,
             ServiceError::InternalLogicError(_e) => StatusCode::INTERNAL_SERVER_ERROR,
+            ServiceError::AnilistError(e) => e.status_code,
         }
     }
 }
 
-pub fn anilist_data_format(message: &'static str) ->  ServiceError {
+pub fn anilist_data_format(message: &'static str) -> ServiceError {
     ServiceError::AnilistDataFormat(ErrorMessageWrapper { message })
 }
 

@@ -1,8 +1,9 @@
+use actix_web::{middleware, web, App, HttpServer};
 use std::sync::Arc;
-use actix_web::{App, HttpServer, middleware, web};
 
-mod routes;
+mod clients;
 mod errors;
+mod routes;
 
 struct AppState {}
 
@@ -32,7 +33,7 @@ async fn main() -> std::io::Result<()> {
             .configure(routes::init_health_routes)
             .configure(routes::init_anilist_routes)
     })
-        .bind(("127.0.0.1", 8080))?
-        .run()
-        .await
+    .bind(("127.0.0.1", 8080))?
+    .run()
+    .await
 }
