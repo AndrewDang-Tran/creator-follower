@@ -1,7 +1,6 @@
 use actix_web::{middleware, web, App, HttpServer};
 use clients::AnilistClient;
 use reqwest;
-use std::sync::Arc;
 
 mod clients;
 mod errors;
@@ -12,25 +11,23 @@ struct AppState {
 }
 
 impl AppState {
-    async fn new() -> Arc<Self> {
-        let state = AppState {
+    fn new() -> Self {
+        AppState {
             anilist_client: AnilistClient {
                 client: reqwest::Client::new(),
             },
-        };
-
-        Arc::new(state)
+        }
     }
 }
 
-type AppData = web::Data<Arc<AppState>>;
+type AppData = web::Data<AppState>;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_web=info");
     pretty_env_logger::init();
 
-    let application_state = AppState::new().await;
+    let application_state = AppState::new();
     let data = web::Data::new(application_state);
     println!("Starting server on: http://127.0.0.1");
     HttpServer::new(move || {
