@@ -1,13 +1,8 @@
 use super::super::{errors, errors::ServiceError};
-use crate::clients::{
-    staff_media_query, staff_media_query::StaffMediaQueryStaffStaffMediaNodes, AnilistClient,
-    StaffMediaQuery,
-};
+use crate::clients::staff_media_query::StaffMediaQueryStaffStaffMediaNodes;
 use crate::AppData;
 use actix_web::{get, http::header::ContentType, web, HttpResponse, Responder};
 use chrono::naive::NaiveDate;
-use graphql_client::Response;
-use reqwest;
 use rss::{Channel, ChannelBuilder, Image, ImageBuilder, Item, ItemBuilder};
 
 const RSS_2_SPECIFICATION_URL: &str = "https://validator.w3.org/feed/docs/rss2.html";
@@ -20,9 +15,7 @@ async fn get_anilist_rss_feed(
     data: AppData,
 ) -> Result<impl Responder, ServiceError> {
     let id: i64 = path.into_inner();
-    let client = AnilistClient {
-        client: reqwest::Client::new(),
-    };
+    let client = &data.anilist_client;
     let staff = client
         .get_staff_media(id)
         .await?
@@ -88,8 +81,12 @@ async fn get_anilist_rss_feed(
                 title = anime_name_collection
                     .into_iter()
                     .filter(|name| name.is_some())
-                    .map(|name| name.expect("logically cannot be None"))
-                    .collect::<Vec<String>>()
+                    .map(|name| {
+                        name.ok_or(errors::internal_logic_error(
+                            "name cannot be None after check",
+                        ))
+                    })
+                    .collect::<Result<Vec<String>, ServiceError>>()?
                     .join(", ");
             }
 

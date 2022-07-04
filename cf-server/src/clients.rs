@@ -5,7 +5,6 @@ use crate::{
 use actix_web::http::StatusCode;
 use graphql_client::{GraphQLQuery, Response};
 use reqwest::Client;
-use serde_json::value::Value;
 
 const ANILIST_GRAPHQL_URL: &str = "https://graphql.anilist.co";
 

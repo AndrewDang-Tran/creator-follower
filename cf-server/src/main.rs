@@ -1,17 +1,25 @@
 use actix_web::{middleware, web, App, HttpServer};
+use clients::AnilistClient;
+use reqwest;
 use std::sync::Arc;
 
 mod clients;
 mod errors;
 mod routes;
 
-struct AppState {}
+struct AppState {
+    anilist_client: AnilistClient,
+}
 
 impl AppState {
     async fn new() -> Arc<Self> {
-        let application_state = AppState {};
+        let state = AppState {
+            anilist_client: AnilistClient {
+                client: reqwest::Client::new(),
+            },
+        };
 
-        Arc::new(application_state)
+        Arc::new(state)
     }
 }
 
@@ -23,7 +31,6 @@ async fn main() -> std::io::Result<()> {
     pretty_env_logger::init();
 
     let application_state = AppState::new().await;
-
     let data = web::Data::new(application_state);
     println!("Starting server on: http://127.0.0.1");
     HttpServer::new(move || {
