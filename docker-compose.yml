@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  cf-server:
+    build: ./cf-server
+    command: cf-server
+  nginx:
+    build: ./nginx
+    ports:
+      - 80:80
+    restart: always
+    depends_on:
+      - cf-server

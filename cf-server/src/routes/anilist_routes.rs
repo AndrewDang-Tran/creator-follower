@@ -10,7 +10,7 @@ const NO_STAFF_DESCRIPTION: &str = "No description provided by Anilist for this 
 const STAFF_NONE: &str = "Staff is None";
 
 #[get("/rss/anilist/staff/{anilist_id}")]
-async fn get_anilist_rss_feed(
+async fn get_anilist_staff_rss_feed(
     path: web::Path<i64>,
     data: AppData,
 ) -> Result<impl Responder, ServiceError> {
@@ -148,5 +148,5 @@ async fn get_anilist_rss_feed(
 }
 
 pub fn init(cfg: &mut web::ServiceConfig) {
-    cfg.service(get_anilist_rss_feed);
+    cfg.service(get_anilist_staff_rss_feed);
 }

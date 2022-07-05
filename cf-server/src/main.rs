@@ -29,7 +29,7 @@ async fn main() -> std::io::Result<()> {
 
     let application_state = AppState::new();
     let data = web::Data::new(application_state);
-    println!("Starting server on: http://127.0.0.1");
+    println!("Starting server on: http://0.0.0.0:8080");
     HttpServer::new(move || {
         App::new()
             .wrap(middleware::Logger::default())
@@ -37,7 +37,7 @@ async fn main() -> std::io::Result<()> {
             .configure(routes::init_health_routes)
             .configure(routes::init_anilist_routes)
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("0.0.0.0", 8080))?
     .run()
     .await
 }
