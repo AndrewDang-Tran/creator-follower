@@ -8,16 +8,18 @@ use rss::{Channel, ChannelBuilder, Image, ImageBuilder, Item, ItemBuilder};
 const RSS_2_SPECIFICATION_URL: &str = "https://validator.w3.org/feed/docs/rss2.html";
 const NO_STAFF_DESCRIPTION: &str = "No description provided by Anilist for this staff.";
 const STAFF_NONE: &str = "Staff is None";
+const STAFF_MEDIA_BATCH_SIZE: i64 = 25;
 
 #[get("/rss/anilist/staff/{anilist_id}")]
 async fn get_anilist_staff_rss_feed(
     path: web::Path<i64>,
     data: AppData,
 ) -> Result<impl Responder, ServiceError> {
+    let mut current_page: i64 = 1;
     let id: i64 = path.into_inner();
     let client = &data.anilist_client;
     let staff = client
-        .get_staff_media(id)
+        .get_staff_media(id, STAFF_MEDIA_BATCH_SIZE, current_page)
         .await?
         .staff
         .ok_or(errors::anilist_data_format(STAFF_NONE))?;

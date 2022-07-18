@@ -25,9 +25,15 @@ impl AnilistClient {
     pub async fn get_staff_media(
         &self,
         id: i64,
+        staff_media_per_page: i64,
+        staff_media_page: i64,
     ) -> Result<staff_media_query::ResponseData, ServiceError> {
         let staff_media_query_variables: staff_media_query::Variables =
-            staff_media_query::Variables { id: Some(id) };
+            staff_media_query::Variables {
+                id: Some(id),
+                staff_media_per_page: Some(staff_media_per_page),
+                staff_media_page: Some(staff_media_page),
+            };
         let staff_media_request = StaffMediaQuery::build_query(staff_media_query_variables);
 
         let res = self

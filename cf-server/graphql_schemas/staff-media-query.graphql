@@ -1,4 +1,4 @@
-query StaffMediaQuery ($id: Int) {
+query StaffMediaQuery ($id: Int, $staff_media_per_page: Int, $staff_media_page: Int) {
   Staff (id: $id) {
     id,
     name {
@@ -11,7 +11,7 @@ query StaffMediaQuery ($id: Int) {
       large
       medium
     },
-    staffMedia {
+    staffMedia (perPage: $staff_media_per_page, page: $staff_media_page) {
       edges {
         staffRole
       }
