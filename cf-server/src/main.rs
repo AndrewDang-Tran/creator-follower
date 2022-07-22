@@ -1,4 +1,5 @@
-use actix_web::{middleware, web, App, HttpServer};
+use actix_files;
+use actix_web::{get, middleware, web, App, Error, HttpRequest, HttpServer};
 use clients::AnilistClient;
 use reqwest;
 
@@ -22,6 +23,12 @@ impl AppState {
 
 type AppData = web::Data<AppState>;
 
+#[get("/")]
+async fn index(_req: HttpRequest) -> Result<actix_files::NamedFile, Error> {
+    let file = actix_files::NamedFile::open("static/index.html")?;
+    Ok(file)
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_web=info");
@@ -36,6 +43,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(data.clone())
             .configure(routes::init_health_routes)
             .configure(routes::init_anilist_routes)
+            .service(index)
     })
     .bind(("0.0.0.0", 8080))?
     .run()
