@@ -100,7 +100,7 @@ async fn get_anilist_staff_rss_feed(
                 .as_ref()
                 .ok_or(errors::anilist_data_format("Staff.staffMedia.startDate"))?;
             let has_start_date =
-                start_date.year.is_some() || start_date.month.is_some() || start_date.day.is_some();
+                start_date.year.is_some() && start_date.month.is_some() && start_date.day.is_some();
             let string_role = r
                 .ok_or(errors::internal_logic_error(
                     "None role after is_some check",
