@@ -5,6 +5,8 @@
 
   --on-background-text: rgb(189, 193, 198);
   --on-primary-text: black;
+
+  --search-input-height: 32px;
 }
 
 body {
@@ -81,13 +83,13 @@ a {
 }
 
 .search-input input:-webkit-autofill {
-    -webkit-box-shadow: 0 0 0 30px rgb(32 33 36) inset;
+    -webkit-box-shadow: 0 0 0 var(--search-input-height) rgb(32 33 36) inset;
     -webkit-text-fill-color: white;
 }
 
 #q {
   width: 90%;
-  height: 32px;
+  height: var(--search-input-height);
   border: none;
   background-color: transparent;
   color: #e8eaed;
