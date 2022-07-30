@@ -1,4 +1,5 @@
-use super::super::errors::ServiceError;
+use super::super::{errors, errors::ServiceError};
+use crate::clients::search_query;
 use crate::AppData;
 use actix_web::{
     body::BoxBody, get, http::header::ContentType, http::StatusCode, web, HttpRequest,
@@ -39,8 +40,9 @@ async fn index(_req: HttpRequest) -> Result<HttpResponse<BoxBody>, ServiceError>
 
 #[derive(Template)]
 #[template(path = "search_results.html")]
-struct SearchResultsTemplate<'a> {
-    _parent: &'a BaseTemplate,
+struct SearchResultsTemplate {
+    page_info: search_query::SearchQueryStaffPageInfo,
+    //results: Vec<search_query::SearchQueryStaffResults>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -54,10 +56,20 @@ async fn search_results(
     shared_data: AppData,
     query_params: web::Query<SearchQuery>,
 ) -> Result<HttpResponse<BoxBody>, ServiceError> {
-    let template = SearchResultsTemplate {
-        _parent: &BaseTemplate {},
-    };
+    let client = &shared_data.anilist_client;
+    let staff = client
+        .search("Naoko Yamada", 50)
+        .await?
+        .staff
+        .ok_or(errors::anilist_data_format("SearchQueryStaff is None"))?;
+    let staff_results = staff.results.ok_or(errors::anilist_data_format(
+        "SearchQueryStafffResults is None",
+    ))?;
+    let page_info = staff
+        .page_info
+        .ok_or(errors::anilist_data_format("PageInfo is None"))?;
 
+    let template = SearchResultsTemplate { page_info };
     template.to_response()
 }
 

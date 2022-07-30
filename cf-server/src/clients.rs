@@ -49,12 +49,11 @@ impl AnilistClient {
             .post(ANILIST_GRAPHQL_URL)
             .json(&staff_media_request)
             .send()
-            .await
-            .unwrap();
+            .await?;
         let status_code = &StatusCode::from_u16(res.status().as_u16())
             .expect("Failed to get Anilist Status Code");
 
-        let response_body: Response<staff_media_query::ResponseData> = res.json().await.unwrap();
+        let response_body: Response<staff_media_query::ResponseData> = res.json().await?;
         if response_body.errors.is_some() {
             let errors = response_body.errors.ok_or(errors::internal_logic_error(
                 "response_body.errors is None after check",
@@ -83,6 +82,41 @@ impl AnilistClient {
         query: &str,
         staff_per_page: i64,
     ) -> Result<search_query::ResponseData, ServiceError> {
-        Err(ServiceError::InternalError)
+        let variables: search_query::Variables = search_query::Variables {
+            search: Some(query.to_string()),
+            staff_per_page: Some(staff_per_page),
+        };
+
+        let search_request = SearchQuery::build_query(variables);
+        let res = self
+            .client
+            .post(ANILIST_GRAPHQL_URL)
+            .json(&search_request)
+            .send()
+            .await?;
+        let status_code = &StatusCode::from_u16(res.status().as_u16())
+            .expect("Failed to get Anilist Status Code");
+        let response_body: Response<search_query::ResponseData> = res.json().await?;
+        if response_body.errors.is_some() {
+            let errors = response_body.errors.ok_or(errors::internal_logic_error(
+                "response_body.errors is None after check",
+            ))?;
+
+            let first = errors
+                .into_iter()
+                .nth(0)
+                .ok_or(errors::anilist_data_format(
+                    "response_body.errors exists but is empty",
+                ))?;
+            let anilist_error = AnilistServerError {
+                message: first.message,
+                status_code: *status_code,
+            };
+
+            return Err(ServiceError::from(anilist_error));
+        }
+        response_body
+            .data
+            .ok_or(errors::anilist_data_format("Data is None"))
     }
 }

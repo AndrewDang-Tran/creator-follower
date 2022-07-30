@@ -5,6 +5,7 @@ use actix_web::{
 };
 use askama::Error as AskamaError;
 use derive_more::{Display, Error};
+use reqwest;
 use std::convert::From;
 use std::fmt;
 
@@ -28,6 +29,20 @@ impl fmt::Display for AnilistServerError {
 impl From<AnilistServerError> for ServiceError {
     fn from(e: AnilistServerError) -> ServiceError {
         ServiceError::AnilistError(e)
+    }
+}
+
+impl From<reqwest::Error> for ServiceError {
+    fn from(e: reqwest::Error) -> ServiceError {
+        if e.is_status() {
+            if let Some(s) = e.status() {
+                return ServiceError::AnilistError(AnilistServerError {
+                    message: "Received error from AnilistServer".to_string(),
+                    status_code: s,
+                });
+            }
+        }
+        ServiceError::InternalError
     }
 }
 
