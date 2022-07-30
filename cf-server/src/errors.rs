@@ -3,6 +3,7 @@ use actix_web::{
     http::{header::ContentType, StatusCode},
     HttpResponse,
 };
+use askama::Error as AskamaError;
 use derive_more::{Display, Error};
 use std::convert::From;
 use std::fmt;
@@ -43,6 +44,9 @@ pub enum ServiceError {
 
     #[display(fmt = "An error occurred in Anilist: {}", _0)]
     AnilistError(AnilistServerError),
+
+    #[display(fmt = "An internal error occurred. Please try again later")]
+    AskamaError(AskamaError),
 }
 
 impl error::ResponseError for ServiceError {
@@ -58,6 +62,7 @@ impl error::ResponseError for ServiceError {
             ServiceError::AnilistDataFormat(_e) => StatusCode::INTERNAL_SERVER_ERROR,
             ServiceError::InternalLogicError(_e) => StatusCode::INTERNAL_SERVER_ERROR,
             ServiceError::AnilistError(e) => e.status_code,
+            ServiceError::AskamaError(e) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }

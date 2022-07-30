@@ -43,6 +43,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(data.clone())
             .configure(routes::init_health_routes)
             .configure(routes::init_anilist_routes)
+            .configure(routes::init_page_routes)
             .service(index)
             .service(actix_files::Files::new("static/js", "static/js").show_files_listing())
             .service(actix_files::Files::new("static/css", "static/css").show_files_listing())

@@ -1,13 +1,9 @@
 use super::super::{errors, errors::ServiceError};
-use crate::clients::staff_media_query::{
-    StaffMediaQueryStaffStaffMediaEdges, StaffMediaQueryStaffStaffMediaNodes,
-};
-use crate::errors::internal_logic_error;
+use crate::clients::staff_media_query::StaffMediaQueryStaffStaffMediaNodes;
 use crate::AppData;
 use actix_web::{get, http::header::ContentType, web, HttpResponse, Responder};
 use chrono::naive::NaiveDate;
 use rss::{Channel, ChannelBuilder, Image, ImageBuilder, Item, ItemBuilder};
-use std::{iter, iter::Zip};
 
 const RSS_2_SPECIFICATION_URL: &str = "https://validator.w3.org/feed/docs/rss2.html";
 const NO_STAFF_DESCRIPTION: &str = "No description provided by Anilist for this staff.";
