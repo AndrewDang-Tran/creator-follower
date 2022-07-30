@@ -7,6 +7,9 @@ mod clients;
 mod errors;
 mod routes;
 
+const STATIC_JS_PATH: &str = "static/js";
+const STATIC_CSS_PATH: &str = "static/css";
+
 struct AppState {
     anilist_client: AnilistClient,
 }
@@ -38,8 +41,8 @@ async fn main() -> std::io::Result<()> {
             .configure(routes::init_health_routes)
             .configure(routes::init_anilist_routes)
             .configure(routes::init_page_routes)
-            .service(actix_files::Files::new("static/js", "static/js").show_files_listing())
-            .service(actix_files::Files::new("static/css", "static/css").show_files_listing())
+            .service(actix_files::Files::new(STATIC_JS_PATH, STATIC_JS_PATH).show_files_listing())
+            .service(actix_files::Files::new(STATIC_CSS_PATH, STATIC_CSS_PATH).show_files_listing())
     })
     .bind(("0.0.0.0", 8080))?
     .run()
