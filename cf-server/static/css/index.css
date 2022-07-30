@@ -80,6 +80,11 @@ a {
   justify-content: center;
 }
 
+.search-input input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 30px rgb(32 33 36) inset;
+    -webkit-text-fill-color: white;
+}
+
 #q {
   width: 90%;
   height: 32px;
