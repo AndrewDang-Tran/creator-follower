@@ -23,12 +23,6 @@ impl AppState {
 
 type AppData = web::Data<AppState>;
 
-#[get("/")]
-async fn index(_req: HttpRequest) -> Result<actix_files::NamedFile, Error> {
-    let file = actix_files::NamedFile::open("static/index.html")?;
-    Ok(file)
-}
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_web=info");
@@ -44,7 +38,6 @@ async fn main() -> std::io::Result<()> {
             .configure(routes::init_health_routes)
             .configure(routes::init_anilist_routes)
             .configure(routes::init_page_routes)
-            .service(index)
             .service(actix_files::Files::new("static/js", "static/js").show_files_listing())
             .service(actix_files::Files::new("static/css", "static/css").show_files_listing())
     })

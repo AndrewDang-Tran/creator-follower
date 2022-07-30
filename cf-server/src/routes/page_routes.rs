@@ -22,14 +22,31 @@ impl<T: Template> TemplateToResponse for T {
     }
 }
 
-#[derive(Debug, Deserialize)]
-struct SearchQuery {
-    q: Option<String>,
+#[derive(Template)]
+#[template(path = "base.html")]
+struct BaseTemplate {}
+
+#[derive(Template)]
+#[template(path = "index.html")]
+struct IndexTemplate {}
+
+#[get("/")]
+async fn index(_req: HttpRequest) -> Result<HttpResponse<BoxBody>, ServiceError> {
+    let template = IndexTemplate {};
+
+    template.to_response()
 }
 
 #[derive(Template)]
 #[template(path = "search_results.html")]
-struct SearchResultsTemplate {}
+struct SearchResultsTemplate<'a> {
+    _parent: &'a BaseTemplate,
+}
+
+#[derive(Debug, Deserialize)]
+struct SearchQuery {
+    q: Option<String>,
+}
 
 #[get("/search")]
 async fn search_results(
@@ -37,11 +54,14 @@ async fn search_results(
     shared_data: AppData,
     query_params: web::Query<SearchQuery>,
 ) -> Result<HttpResponse<BoxBody>, ServiceError> {
-    let template = SearchResultsTemplate {};
+    let template = SearchResultsTemplate {
+        _parent: &BaseTemplate {},
+    };
 
     template.to_response()
 }
 
 pub fn init(cfg: &mut web::ServiceConfig) {
+    cfg.service(index);
     cfg.service(search_results);
 }
