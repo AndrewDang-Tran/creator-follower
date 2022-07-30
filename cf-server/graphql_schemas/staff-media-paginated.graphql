@@ -1,0 +1,27 @@
+query StaffMediaQuery ($id: Int, $staff_media_per_page: Int, $staff_media_page: Int) {
+  Staff (id: $id) {
+    id,
+    staffMedia (perPage: $staff_media_per_page, page: $staff_media_page) {
+      edges {
+        staffRole
+      }
+      nodes {
+        id,
+        title {
+          romaji
+          english
+          native
+        },
+        type,
+        description,
+        siteUrl,
+        startDate {
+          year
+          month
+          day
+        },
+        status
+      }
+    }
+  }
+}

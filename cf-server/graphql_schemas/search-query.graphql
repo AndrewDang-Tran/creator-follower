@@ -1,0 +1,18 @@
+query SearchQuery ($search: String, $staff_per_page: Int) {
+  staff: Page(perPage: $staff_per_page) {
+    pageInfo {
+      total
+    }
+    results: staff(search: $search) {
+      id
+      primaryOccupations
+      name {
+        full,
+        native
+      }
+      image {
+        medium
+      }
+    }
+  }
+}

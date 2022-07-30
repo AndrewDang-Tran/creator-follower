@@ -16,6 +16,14 @@ const ANILIST_GRAPHQL_URL: &str = "https://graphql.anilist.co";
 )]
 pub struct StaffMediaQuery;
 
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "graphql_schemas/anilist-schema.graphql",
+    query_path = "graphql_schemas/search-query.graphql",
+    response_derives = "Serialize,Debug"
+)]
+pub struct SearchQuery;
+
 #[derive(Clone)]
 pub struct AnilistClient {
     pub client: Client,
@@ -43,7 +51,8 @@ impl AnilistClient {
             .send()
             .await
             .unwrap();
-        let status_code = &StatusCode::from_u16(res.status().as_u16()).expect("asdasd");
+        let status_code = &StatusCode::from_u16(res.status().as_u16())
+            .expect("Failed to get Anilist Status Code");
 
         let response_body: Response<staff_media_query::ResponseData> = res.json().await.unwrap();
         if response_body.errors.is_some() {
@@ -67,5 +76,13 @@ impl AnilistClient {
         response_body
             .data
             .ok_or(errors::anilist_data_format("Data is None"))
+    }
+
+    pub async fn search(
+        &self,
+        query: &str,
+        staff_per_page: i64,
+    ) -> Result<search_query::ResponseData, ServiceError> {
+        Err(ServiceError::InternalError)
     }
 }
