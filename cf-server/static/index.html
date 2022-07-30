@@ -2,12 +2,57 @@
 <html>
   <head>
     <title>Creator Follower</title>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1"
+          charset="utf-8"/>
   </head>
   <body>
     <div class="content">
-      Hello World!
-      <div class="input">
+      <div class="top-bar">
+        <h1 class="title">Creator Follower</h1>
       </div>
+      <div class="mid-bar">
+        <form class="form-content" action="/search#a" method="get">
+          <div class="search">
+            <div class="search-input">
+              <input id="q"
+                     name="q"
+                     type="text"
+                     value=""
+                     placeholder="Search for an anime creator"
+                     tabindex="1"
+                     spellcheck="false"/>
+            </div>
+            <input id="submit" type="submit" value="Search" tabindex="-1"/>
+          </div>
+        </form>
+        <div class="about">
+          <div class="about-heading">
+            <h3>About</h3>
+          </div>
+          <div class="about-content">
+            <p>
+              Creator Follower provides RSS feeds for following a creator's content without having to create an account or login. It's an open source project with the code hosted
+              on <a href="https://github.com/AndrewDang-Tran/creator-follower">github</a>. The project is not affiliated with any of the sources and is just an extension of
+              functionality.
+            </p>
+          </div>
+          <div class="sources-heading">
+            <h3>Sources</h3>
+          </div>
+          <div class="sources-content">
+            <a href="https://anilist.co">
+              <img src="https://anilist.co/img/icons/icon.svg" title="AniList" alt="AniList"/>
+            </a>
+
+          </div>
+        </div>
+      </div>
+      <div class="left-side-bar"></div>
+      <div class="right-side-bar"></div>
     </div>
   </body>
+  <script src="static/js/index.js"></script>
+  <link rel="stylesheet" type="text/css" href="static/css/index.css">
+  <link href='https://fonts.googleapis.com/css?family=Roboto:400,500,300,700' rel='stylesheet' type='text/css'>
 </html>
