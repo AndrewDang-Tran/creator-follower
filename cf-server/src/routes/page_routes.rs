@@ -38,11 +38,18 @@ async fn index(_req: HttpRequest) -> Result<HttpResponse<BoxBody>, ServiceError>
     template.to_response()
 }
 
+struct SearchResult {
+    primary_occupations: Vec<String>,
+    full_name: String,
+    native_name: String,
+    image_link: String,
+}
+
 #[derive(Template)]
 #[template(path = "search_results.html")]
 struct SearchResultsTemplate {
     page_info: search_query::SearchQueryStaffPageInfo,
-    //results: Vec<search_query::SearchQueryStaffResults>,
+    search_results: Vec<SearchResult>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -56,20 +63,51 @@ async fn search_results(
     shared_data: AppData,
     query_params: web::Query<SearchQuery>,
 ) -> Result<HttpResponse<BoxBody>, ServiceError> {
+    let q = match query_params.into_inner().q {
+        Some(v) => v,
+        None => "".to_string(),
+    };
     let client = &shared_data.anilist_client;
     let staff = client
-        .search("Naoko Yamada", 50)
+        .search(&q, 50)
         .await?
         .staff
         .ok_or(errors::anilist_data_format("SearchQueryStaff is None"))?;
-    let staff_results = staff.results.ok_or(errors::anilist_data_format(
-        "SearchQueryStafffResults is None",
-    ))?;
+    let staff_results = staff
+        .results
+        .ok_or(errors::anilist_data_format(
+            "SearchQueryStafffResults is None",
+        ))?
+        .into_iter()
+        .filter_map(|row| row)
+        .map(|row| {
+            let primary_occupations = row
+                .primary_occupations
+                .unwrap()
+                .into_iter()
+                .filter_map(|o| o)
+                .collect();
+            let name = row.name.unwrap();
+            let full_name = name.full.unwrap();
+            let native_name = name.native.unwrap();
+            let image_link = row.image.unwrap().medium.unwrap();
+
+            SearchResult {
+                primary_occupations,
+                full_name,
+                native_name,
+                image_link,
+            }
+        })
+        .collect::<Vec<SearchResult>>();
     let page_info = staff
         .page_info
         .ok_or(errors::anilist_data_format("PageInfo is None"))?;
 
-    let template = SearchResultsTemplate { page_info };
+    let template = SearchResultsTemplate {
+        page_info,
+        search_results: staff_results,
+    };
     template.to_response()
 }
 

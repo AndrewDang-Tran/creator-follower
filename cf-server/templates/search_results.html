@@ -1,4 +1,26 @@
 {% extends "base.html" %}
 {% block middle %}
-Search Total Count: {{ page_info.total.unwrap() }}
+
+<div class="search-results">
+  <div>
+    {{ page_info.total.unwrap() }} results found
+  </div>
+  <div class="search-results-table">
+  {% for row in search_results %}
+    <div class="results-row">
+      <div class="left-image">
+        <img class="search-result-image" src="{{ row.image_link }}">
+      </div>
+      <div class="right-name">
+        <h4>{{ row.full_name }}, {{ row.native_name }}</h4>
+      </div>
+      <div class="right-details">
+        {% for occupation in row.primary_occupations %}
+          {{ occupation }}
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+  </div>
+</div>
 {% endblock middle %}

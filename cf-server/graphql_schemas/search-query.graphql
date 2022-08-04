@@ -4,7 +4,6 @@ query SearchQuery ($search: String, $staff_per_page: Int) {
       total
     }
     results: staff(search: $search) {
-      id
       primaryOccupations
       name {
         full,
