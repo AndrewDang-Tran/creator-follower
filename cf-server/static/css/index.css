@@ -29,9 +29,10 @@ a {
   grid-template-areas:
     "top-bar top-bar top-bar"
     "left-side-bar center right-side-bar";
-  height: 100vh;
-  min-height: 100%;
-  width: 100vw;
+  height: 100%;
+  min-height: 100vh;
+  width: 100%;
+  min-width: 100vw;
 
   font-family: Roboto, sans-serif;
   background: var(--background);
