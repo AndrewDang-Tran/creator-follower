@@ -1,19 +1,6 @@
 {% extends "base.html" %}
 {% block middle %}
-<form class="form-content" action="/search#a" method="get">
-  <div class="search">
-    <div class="search-input">
-      <input id="q"
-             name="q"
-             type="text"
-             value=""
-             placeholder="Search for an anime creator"
-             tabindex="1"
-             spellcheck="false"/>
-    </div>
-    <input id="submit" type="submit" value="Search" tabindex="-1"/>
-  </div>
-</form>
+{% include "search_bar.html" %}
 <div class="about">
   <div class="about-heading">
     <h3>About</h3>
