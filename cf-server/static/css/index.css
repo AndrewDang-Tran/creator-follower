@@ -173,14 +173,29 @@ a {
   justify-content: center;
 }
 
-.staff-details-table {
-  width: 100%;
-  margin-bottom: 16px;
+.right-details {
+  display: grid;
+  grid-template-columns: auto;
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    "staff-details-table"
+    "links";
+
+  width: 100%
 }
 
 .right-name {
   display: flex;
   justify-content: center;
+}
+
+.staff-details-table {
+  grid-area: staff-details-table;
+  display: flex;
+  justify-content: center;
+
+  width: 100%;
+  margin-bottom: 16px;
 }
 
 .row-links {

@@ -3,7 +3,7 @@
 {% include "search_bar.html" %}
 <div class="search-results">
   <div class="aggregate-info">
-    {{ page_info.total.unwrap() }} results found
+    {{ search_info.num_results_on_page }} shown out of {{ search_info.num_found_results}} results found
   </div>
   <div class="search-results-table">
   {% for row in search_results %}
@@ -17,7 +17,7 @@
       <div class="right-details">
         <table class="staff-details-table">
           <tbody>
-            <th>Roles</th>
+            <th>Occupation</th>
             <td>
               {% for occupation in row.primary_occupations %}
                 {{ occupation }}<br>

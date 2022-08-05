@@ -8,6 +8,7 @@ use derive_more::{Display, Error};
 use reqwest;
 use std::convert::From;
 use std::fmt;
+use std::num::TryFromIntError;
 
 #[derive(Debug, Display, Error)]
 pub struct ErrorMessageWrapper {
@@ -29,6 +30,12 @@ impl fmt::Display for AnilistServerError {
 impl From<AnilistServerError> for ServiceError {
     fn from(e: AnilistServerError) -> ServiceError {
         ServiceError::AnilistError(e)
+    }
+}
+
+impl From<TryFromIntError> for ServiceError {
+    fn from(e: TryFromIntError) -> ServiceError {
+        ServiceError::InternalError
     }
 }
 
