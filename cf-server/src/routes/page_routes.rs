@@ -43,6 +43,7 @@ struct SearchResult {
     full_name: String,
     native_name: String,
     image_link: String,
+    rss_link: String,
 }
 
 #[derive(Template)]
@@ -86,17 +87,20 @@ async fn search_results(
                 .unwrap()
                 .into_iter()
                 .filter_map(|o| o)
+                .map(|o| o.trim().to_string())
                 .collect();
             let name = row.name.unwrap();
             let full_name = name.full.unwrap();
             let native_name = name.native.unwrap();
             let image_link = row.image.unwrap().medium.unwrap();
+            let rss_link = anilist_staff_link(row.id);
 
             SearchResult {
                 primary_occupations,
                 full_name,
                 native_name,
                 image_link,
+                rss_link,
             }
         })
         .collect::<Vec<SearchResult>>();
@@ -109,6 +113,10 @@ async fn search_results(
         search_results: staff_results,
     };
     template.to_response()
+}
+
+fn anilist_staff_link(staff_id: i64) -> String {
+    return format!("http://creatorfollower.com/rss/anilist/staff/{staff_id}").to_string();
 }
 
 pub fn init(cfg: &mut web::ServiceConfig) {

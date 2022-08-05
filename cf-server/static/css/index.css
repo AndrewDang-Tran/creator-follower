@@ -154,7 +154,7 @@ a {
   grid-area: results;
   display: grid;
   grid-template-columns: 1fr 3fr;
-  grid-template-rows: fit-content(100%);
+  grid-template-rows: auto 1fr;
   grid-template-areas:
     "left right-name "
     "left right-details";
@@ -170,12 +170,21 @@ a {
 .left-image {
   grid-area: left;
   display: flex;
-  justify-content: center;c
+  justify-content: center;
 }
 
-.right-details {
-
+.staff-details-table {
+  width: 100%;
+  margin-bottom: 16px;
 }
 
+.right-name {
+  display: flex;
+  justify-content: center;
+}
 
+.row-links {
+  display: flex;
+  justify-content: space-evenly;
+}
 

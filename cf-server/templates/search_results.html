@@ -2,7 +2,7 @@
 {% block middle %}
 {% include "search_bar.html" %}
 <div class="search-results">
-  <div class="page-info">
+  <div class="aggregate-info">
     {{ page_info.total.unwrap() }} results found
   </div>
   <div class="search-results-table">
@@ -12,12 +12,22 @@
         <img class="search-result-image" src="{{ row.image_link }}">
       </div>
       <div class="right-name">
-        <h4>{{ row.full_name }}, {{ row.native_name }}</h4>
+        <h2>{{ row.full_name }}, {{ row.native_name }}</h2>
       </div>
       <div class="right-details">
-        {% for occupation in row.primary_occupations %}
-          {{ occupation }}
-        {% endfor %}
+        <table class="staff-details-table">
+          <tbody>
+            <th>Roles</th>
+            <td>
+              {% for occupation in row.primary_occupations %}
+                {{ occupation }}<br>
+              {% endfor %}
+            </td>
+          </tbody>
+        </table>
+        <div class="row-links">
+          <a href="{{ row.rss_link }}">RSS</a>
+        </div>
       </div>
     </div>
   {% endfor %}

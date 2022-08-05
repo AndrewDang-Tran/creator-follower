@@ -77,7 +77,7 @@ impl error::ResponseError for ServiceError {
             ServiceError::AnilistDataFormat(_e) => StatusCode::INTERNAL_SERVER_ERROR,
             ServiceError::InternalLogicError(_e) => StatusCode::INTERNAL_SERVER_ERROR,
             ServiceError::AnilistError(e) => e.status_code,
-            ServiceError::AskamaError(e) => StatusCode::INTERNAL_SERVER_ERROR,
+            ServiceError::AskamaError(_e) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }
