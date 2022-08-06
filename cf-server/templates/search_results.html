@@ -12,17 +12,19 @@
         <img class="search-result-image" src="{{ row.image_link }}">
       </div>
       <div class="right-name">
-        <h2>{{ row.full_name }}, {{ row.native_name }}</h2>
+        <h2>{{ row.show_name }}</h2>
       </div>
       <div class="right-details">
         <table class="staff-details-table">
           <tbody>
-            <th>Occupation</th>
-            <td>
-              {% for occupation in row.primary_occupations %}
-                {{ occupation }}<br>
-              {% endfor %}
-            </td>
+            {% if !row.primary_occupations.is_empty() %}
+              <th>Occupation</th>
+              <td>
+                {% for occupation in row.primary_occupations %}
+                  {{ occupation }}<br>
+                {% endfor %}
+              </td>
+            {% endif %}
           </tbody>
         </table>
         <div class="row-links">

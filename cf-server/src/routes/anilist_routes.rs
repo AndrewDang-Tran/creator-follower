@@ -47,13 +47,8 @@ async fn get_anilist_staff_rss_feed(
         vec![anilist_staff_name.full, anilist_staff_name.native];
     let staff_name: String = staff_name_collection
         .into_iter()
-        .filter(|name| name.is_some())
-        .map(|name| {
-            name.ok_or(errors::internal_logic_error(
-                "name cannot be None after is_some() check",
-            ))
-        })
-        .collect::<Result<Vec<String>, ServiceError>>()?
+        .filter_map(|name| name)
+        .collect::<Vec<String>>()
         .join(", ");
 
     let mut media_in_page = media.len();
@@ -166,8 +161,8 @@ async fn get_anilist_staff_rss_feed(
         .collect::<Result<Vec<Item>, ServiceError>>()?;
 
     staff_channel_items.sort_by(|a, b| {
-        let b_date = b.pub_date().unwrap();
-        let a_date = a.pub_date().unwrap();
+        let b_date = b.pub_date().expect("Logically must have pub_date");
+        let a_date = a.pub_date().expect("Logically must have pub_date");
         b_date.cmp(a_date)
     });
 

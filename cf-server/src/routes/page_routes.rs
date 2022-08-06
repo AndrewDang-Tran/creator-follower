@@ -42,8 +42,7 @@ async fn index(_req: HttpRequest) -> Result<HttpResponse<BoxBody>, ServiceError>
 
 struct SearchResult {
     primary_occupations: Vec<String>,
-    full_name: String,
-    native_name: String,
+    show_name: String,
     image_link: String,
     rss_link: String,
 }
@@ -91,32 +90,47 @@ async fn search_results(
         .map(|row| {
             let primary_occupations = row
                 .primary_occupations
-                .unwrap()
+                .ok_or(errors::anilist_data_format(
+                    "Staff.results.primary_occupations is None",
+                ))?
                 .into_iter()
                 .filter_map(|o| o)
                 .map(|o| o.trim().to_string())
                 .collect();
-            let name = row.name.unwrap();
-            let full_name = name.full.unwrap();
-            let native_name = name.native.unwrap();
-            let image_link = row.image.unwrap().medium.unwrap();
+            let name = row.name.ok_or(errors::anilist_data_format(
+                "Staff.results.name not provided for Staff",
+            ))?;
+            let staff_name_collection: Vec<Option<String>> = vec![name.full, name.native];
+            let show_name: String = staff_name_collection
+                .into_iter()
+                .filter_map(|n| n)
+                .collect::<Vec<String>>()
+                .join(", ");
+            let image_link = row
+                .image
+                .ok_or(errors::anilist_data_format("Staff.results.image is None"))?
+                .medium
+                .ok_or(errors::anilist_data_format(
+                    "Staff.results.image.medium is None",
+                ))?;
             let rss_link = anilist_staff_link(row.id);
 
-            SearchResult {
+            Ok(SearchResult {
                 primary_occupations,
-                full_name,
-                native_name,
+                show_name,
                 image_link,
                 rss_link,
-            }
+            })
         })
-        .collect::<Vec<SearchResult>>();
+        .collect::<Result<Vec<SearchResult>, ServiceError>>()?;
     let page_info = staff
         .page_info
         .ok_or(errors::anilist_data_format("PageInfo is None"))?;
 
     let search_info = CompletedSearchInfo {
-        num_found_results: page_info.total.unwrap(),
+        num_found_results: page_info
+            .total
+            .ok_or(errors::anilist_data_format("page_info.total is None"))?,
         num_results_on_page: u32::try_from(staff_results.len())?,
     };
 
