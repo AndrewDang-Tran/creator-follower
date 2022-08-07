@@ -11,3 +11,6 @@
 
 # Do not include db files
 **/*.db*
+
+# testing will generate this folder which may contain ssl certs
+certbot

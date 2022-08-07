@@ -34,7 +34,7 @@ impl From<AnilistServerError> for ServiceError {
 }
 
 impl From<TryFromIntError> for ServiceError {
-    fn from(e: TryFromIntError) -> ServiceError {
+    fn from(_e: TryFromIntError) -> ServiceError {
         ServiceError::InternalError
     }
 }
