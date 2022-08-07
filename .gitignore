@@ -14,3 +14,4 @@
 
 # testing will generate this folder which may contain ssl certs
 certbot
+nginx/conf
