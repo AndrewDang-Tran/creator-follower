@@ -9,6 +9,7 @@ const RSS_2_SPECIFICATION_URL: &str = "https://validator.w3.org/feed/docs/rss2.h
 const NO_STAFF_DESCRIPTION: &str = "No description provided by Anilist for this staff.";
 const STAFF_NONE: &str = "Staff is None";
 const STAFF_MEDIA_BATCH_SIZE: i64 = 25;
+const ANILIST_TTL: &str = "360";
 
 struct AnilistMedia {
     role: String,
@@ -193,6 +194,7 @@ async fn get_anilist_staff_rss_feed(
         .image(rss_image)
         .docs(RSS_2_SPECIFICATION_URL.to_string())
         .items(staff_channel_items)
+        .ttl(Some(ANILIST_TTL.to_string()))
         .build();
 
     Ok(HttpResponse::Ok()
