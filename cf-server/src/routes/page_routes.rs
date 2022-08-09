@@ -142,7 +142,7 @@ async fn search_results(
 }
 
 fn anilist_staff_link(staff_id: i64) -> String {
-    return format!("https://creatorfollower.com/rss/anilist/staff/{staff_id}").to_string();
+    return format!("/rss/anilist/staff/{staff_id}").to_string();
 }
 
 pub fn init(cfg: &mut web::ServiceConfig) {
