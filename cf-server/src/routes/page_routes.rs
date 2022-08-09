@@ -45,6 +45,7 @@ struct SearchResult {
     show_name: String,
     image_link: String,
     rss_link: String,
+    source_link: String,
 }
 
 struct CompletedSearchInfo {
@@ -113,13 +114,15 @@ async fn search_results(
                 .ok_or(errors::anilist_data_format(
                     "Staff.results.image.medium is None",
                 ))?;
-            let rss_link = anilist_staff_link(row.id);
+            let rss_link = anilist_rss_link(row.id);
+            let source_link = anilist_staff_link(row.id);
 
             Ok(SearchResult {
                 primary_occupations,
                 show_name,
                 image_link,
                 rss_link,
+                source_link,
             })
         })
         .collect::<Result<Vec<SearchResult>, ServiceError>>()?;
@@ -141,8 +144,12 @@ async fn search_results(
     template.to_response()
 }
 
-fn anilist_staff_link(staff_id: i64) -> String {
+fn anilist_rss_link(staff_id: i64) -> String {
     return format!("/rss/anilist/staff/{staff_id}").to_string();
+}
+
+fn anilist_staff_link(staff_id: i64) -> String {
+    return format!("https://anilist.co/staff/{staff_id}").to_string();
 }
 
 pub fn init(cfg: &mut web::ServiceConfig) {
