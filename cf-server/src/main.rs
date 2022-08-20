@@ -3,6 +3,9 @@ use actix_web::{get, middleware, web, App, Error, HttpRequest, HttpServer};
 use clients::AnilistClient;
 use reqwest;
 
+#[macro_use]
+extern crate log;
+
 mod clients;
 mod errors;
 mod routes;
@@ -33,7 +36,7 @@ async fn main() -> std::io::Result<()> {
 
     let application_state = AppState::new();
     let data = web::Data::new(application_state);
-    println!("Starting server on: http://0.0.0.0:8080");
+    info!("Starting server on: http://0.0.0.0:8080");
     HttpServer::new(move || {
         App::new()
             .wrap(middleware::Logger::default())
